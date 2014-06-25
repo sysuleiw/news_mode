@@ -25,7 +25,7 @@ def get_response(url, all_resp, filter_by_timeout):
         filter_by_timeout.append(url)
 
 
-def get_redirect_request(all_resp, filter_by_redirect, filter_by_redirect_requests):
+def get_redirect_request(req, filter_by_redirect, filter_by_redirect_requests):
     try:
         if req.status_code < 300 or req.status_code > 302:
             filter_by_redirect.append(req.url)
@@ -52,7 +52,7 @@ def get_by_redirect(filter_by_url):
     filter_by_redirect_requests = []
     for req in all_resp:
         stackless.tasklet(get_redirect_request)(
-            all_resp, filter_by_redirect, filter_by_redirect_requests)
+            req, filter_by_redirect, filter_by_redirect_requests)
     stackless.run()
     file.file_writelines(Config.filter_by_redirect, filter_by_redirect)
     get_by_fingerprint(filter_by_redirect_requests)
