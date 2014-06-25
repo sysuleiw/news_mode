@@ -1,7 +1,6 @@
 #-*-coding:utf8 -*-
 import re
 import multiprocessing
-import pdb
 import traceback
 import codecs
 
@@ -13,40 +12,23 @@ class FileOper(object):
     '''
 
     def file_read(self, file_path):
-        '''读取文件内容,返回一个数组
+        '''读取文件内容,通过域名过滤wap版本,返回一个数组
         '''
         result = []
-        pc_url = re.compile('^(m|3g)\..*') #m或3g开头直接过滤
-
         with open(file_path, 'r') as f:
-            result = ['http://' + line.replace('\n', '').strip() for line in f.readlines() if not pc_url.search(line)]
+            result = [line.replace('\n', '').strip() for line in f.readlines()]
         return result
 
-    def file_write(self, file_path, content):
-        '''写入内容到某个文件中
-        '''
-        try:
-            # 普通的write和writelines接口无法写入utf8,需要通过codecs的open函数写入
-            fw = codecs.open(file_path, 'w', 'utf-8')
-            fw.write(content)
-            fw.close()
-        except:
-            print 'error!:'
-            print traceback.format_stack()
-            fw.close()
-
     def file_writelines(self, file_path, lines):
-        '''写入内容到某个文件中,此时的内容是一个数组
+        '''写数组到文件中
         '''
         try:
             fw = codecs.open(file_path, 'w', 'utf-8')
             fw.writelines([line + '\n' for line in lines])
+            fw.flush()
             fw.close()
         except:
-            print 'error!:'
             print traceback.format_stack()
-            pdb.set_trace()
-            fw.close()
 
 
 class Config(object):
@@ -54,21 +36,35 @@ class Config(object):
     '''配置文件类
     存放全局变量
     '''
-    url = 'url.txt'         # 存放待采集网站的首页地址
-    filter_by_url = 'filter_by_url.txt' #存放经过域名过滤的站点
-    filter_by_redirect = 'filter_by_redirect.txt' #存放经过跳转过滤的站点
-    filter_by_fingerprint = 'filter_by_fingerprint.txt'
-    process_num = 2  # 进程数量,可根据cpu数量选择,一般cpu数量*2即可
+    # 待处理的域名列表
+    url = 'input/url.txt'
+    # 存放经过域名过滤的站点
+    filter_by_url = 'output/filter_by_url.txt'
+    # 存放经过30x跳转过滤的站点
+    filter_by_redirect = 'output/filter_by_redirect.txt'
+    # 存放经过keyword过滤的站点
+    filter_by_fingerprint = 'output/filter_by_fingerprint.txt'
+    # 通过关键字过滤资讯站点
     r_fingerprint = re.compile(u'新闻|资讯|门户')
+    # 需要过滤的网站类型  wap,bbs
+    # wap版域名特征:
+    #   1 m.开头
+    #   2 3g.开头
+    #   3 3g.在域名中间
+    r_wap_url = re.compile('(^m\..*)|(.*?(3g|bbs)\..*?)')
+    # 获取html head内容,用于分析fingerprint
+    # 注意如果有很多字符的情况下不建议使用.*,容易误判,建议使用[\s\S]*,例如获取网页head标签内的内容
+    r_get_head = re.compile('<head>([\s\S]*?)</head>')
     # 进程间共享数据
-    lock = multiprocessing.Lock()  # 进程锁,保证浏览器进程和app进程数量相同
+    process_num = multiprocessing.cpu_count() * 2  # 进程数量
+    lock = multiprocessing.Lock()  # 进程锁
     ipc_list = multiprocessing.Manager().list()  # 存放2级图片链接
-    #请求头
+    # 请求头
     headers = {
-        'Connection':'keep-alive',
+        'Connection': 'keep-alive',
         'Accept-Language': 'en-US,en;q=0.8',
         'Accept:': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        #'Host': 'www.sina.com.cn',
-        'User-Agent':'Mozilla/5.0 (Linux; Android 4.2.1; en-us; Nexus 4 Build/JOP40D) AppleWebKit/535.19 (KHTML, like     Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19',
-        'Accept-Encoding':'gzip,deflate,sdch',
-        }
+        # 'Host': 'www.sina.com.cn', # Host字段不可设置,30x跳转域名可能有变
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 4.2.1; en-us; Nexus 4 Build/JOP40D) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19',
+        'Accept-Encoding': 'gzip,deflate,sdch',
+    }
