@@ -2,6 +2,7 @@
 import requests
 import urlparse
 from common import *
+import stackless
 
 
 def get_by_url(file):
@@ -14,36 +15,45 @@ def get_by_url(file):
     get_by_redirect(filter_by_url)
 
 
+def get_response(url, all_resp, filter_by_timeout):
+    try:
+        resp = requests.get(
+            url, headers=Config.headers, allow_redirects=False, timeout=Config.timeout_limit)
+        all_resp.append(resp)
+    except:
+        # 超时异常
+        filter_by_timeout.append(url)
+
+
+def get_redirect_request(all_resp, filter_by_redirect, filter_by_redirect_requests):
+    try:
+        if req.status_code < 300 or req.status_code > 302:
+            filter_by_redirect.append(req.url)
+            filter_by_redirect_requests.append(req)
+        else:
+            hostname = urlparse.urlparse(req.headers['location']).hostname
+            if hostname and hostname.find('www.') > -1:
+                filter_by_redirect.append(req.url)
+                filter_by_redirect_requests.append(req)
+    except:
+        print 'redirect error: ' + req.url + ':' + str(req.status_code)
+
+
 def get_by_redirect(filter_by_url):
     '''若目标url包含30x跳转,且跳转之后的域名包含www.关键字'''
     filter_by_timeout = []
     all_resp = []
     for url in filter_by_url:
-        try:
-            resp = requests.get(
-                url, headers=Config.headers, allow_redirects=False, timeout=Config.timeout_limit)
-            all_resp.append(resp)
-        except:
-            # 超时异常
-            filter_by_timeout.append(url)
-
+        stackless.tasklet(get_response)(url, all_resp, filter_by_timeout)
+    stackless.run()
     file.file_writelines(Config.filter_by_timeout, filter_by_timeout)
 
     filter_by_redirect = []
     filter_by_redirect_requests = []
     for req in all_resp:
-        try:
-            if req.status_code < 300 or req.status_code > 302:
-                filter_by_redirect.append(req.url)
-                filter_by_redirect_requests.append(req)
-            else:
-                hostname = urlparse.urlparse(req.headers['location']).hostname
-                if hostname and hostname.find('www.') > -1:
-                    filter_by_redirect.append(req.url)
-                    filter_by_redirect_requests.append(req)
-        except:
-            print 'redirect error: ' + req.url + ':' + str(req.status_code)
-
+        stackless.tasklet(get_redirect_request)(
+            all_resp, filter_by_redirect, filter_by_redirect_requests)
+    stackless.run()
     file.file_writelines(Config.filter_by_redirect, filter_by_redirect)
     get_by_fingerprint(filter_by_redirect_requests)
 
