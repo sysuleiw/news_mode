@@ -16,11 +16,22 @@ def get_by_url(file):
 
 def get_by_redirect(filter_by_url):
     '''若目标url包含30x跳转,且跳转之后的域名包含www.关键字'''
-    all_requests = [requests.get(url, headers=Config.headers, allow_redirects=False)
-                    for url in filter_by_url]
+    filter_by_timeout = []
+    all_resp = []
+    for url in filter_by_url:
+        try:
+            resp = requests.get(
+                url, headers=Config.headers, allow_redirects=False, timeout=Config.timeout_limit)
+            all_resp.append(resp)
+        except:
+            # 超时异常
+            filter_by_timeout.append(url)
+
+    file.file_writelines(Config.filter_by_timeout, filter_by_timeout)
+
     filter_by_redirect = []
     filter_by_redirect_requests = []
-    for req in all_requests:
+    for req in all_resp:
         try:
             if req.status_code < 300 or req.status_code > 302:
                 filter_by_redirect.append(req.url)

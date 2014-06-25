@@ -44,6 +44,8 @@ class Config(object):
     filter_by_redirect = 'output/filter_by_redirect.txt'
     # 存放经过keyword过滤的站点
     filter_by_fingerprint = 'output/filter_by_fingerprint.txt'
+    # 记录超时站点
+    filter_by_timeout = 'output/timeout.txt'
     # 通过关键字过滤资讯站点
     r_fingerprint = re.compile(u'新闻|资讯|门户')
     # 需要过滤的网站类型  wap,bbs
@@ -55,6 +57,8 @@ class Config(object):
     # 获取html head内容,用于分析fingerprint
     # 注意如果有很多字符的情况下不建议使用.*,容易误判,建议使用[\s\S]*,例如获取网页head标签内的内容
     r_get_head = re.compile('<head>([\s\S]*?)</head>')
+    # 该时间内无resp则自动放弃
+    timeout_limit = 1
     # 进程间共享数据
     process_num = multiprocessing.cpu_count() * 2  # 进程数量
     lock = multiprocessing.Lock()  # 进程锁
