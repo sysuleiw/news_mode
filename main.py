@@ -1,6 +1,7 @@
 # coding:utf8
 import requests
 import urlparse
+import time
 from common import *
 
 
@@ -67,4 +68,6 @@ def get_by_fingerprint(filter_by_redirect_requests):
 
 if __name__ == "__main__":
     file = FileOper()
+    start = time.time()
     get_by_url(file)
+    print '{0}s'.format(time.time() - start)
