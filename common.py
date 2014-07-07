@@ -46,6 +46,8 @@ class Config(object):
     filter_by_fingerprint = 'output/filter_by_fingerprint.txt'
     # 记录超时站点
     filter_by_timeout = 'output/timeout.txt'
+    # 记录错误站点
+    filter_by_errors = 'output/errors.txt'
     # 通过关键字过滤资讯站点
     r_fingerprint = re.compile(u'新闻|资讯|门户')
     # 需要过滤的网站类型  wap,bbs
@@ -62,7 +64,11 @@ class Config(object):
     # 进程间共享数据
     process_num = multiprocessing.cpu_count() * 2  # 进程数量
     lock = multiprocessing.Lock()  # 进程锁
-    ipc_list = multiprocessing.Manager().list()  # 存放2级图片链接
+    ipc_list_url = multiprocessing.Manager().list()  # 存放通过url过滤的网址
+    ipc_list_redirect = multiprocessing.Manager().list()  # 存放通过url过滤的网址
+    ipc_list_fingerprint = multiprocessing.Manager().list()  # 存放通过url过滤的网址
+    ipc_list_timeout = multiprocessing.Manager().list()  # 存放通过url过滤的网址
+    ipc_list_errors = multiprocessing.Manager().list()  # 存放通过url过滤的网址
     # 请求头
     headers = {
         'Connection': 'keep-alive',
