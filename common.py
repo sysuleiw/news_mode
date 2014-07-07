@@ -50,6 +50,8 @@ class Config(object):
     filter_by_errors = 'output/errors.txt'
     # 通过关键字过滤资讯站点
     r_fingerprint = re.compile(u'新闻|资讯|门户')
+    # 通过关键字过滤资讯站点
+    r_forbidden_fingerprint = re.compile(u'论坛')
     # 需要过滤的网站类型  wap,bbs
     # wap版域名特征:
     #   1 m.开头
@@ -59,6 +61,8 @@ class Config(object):
     # 获取html head内容,用于分析fingerprint
     # 注意如果有很多字符的情况下不建议使用.*,容易误判,建议使用[\s\S]*,例如获取网页head标签内的内容
     r_get_head = re.compile('<head>([\s\S]*?)</head>')
+    # 通过js跳转的代码
+    r_js_redirect = re.compile('window\.location(\.href)?\s*=')
     # 该时间内无resp则自动放弃
     timeout_limit = 1
     # 进程间共享数据
