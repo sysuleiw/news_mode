@@ -51,7 +51,7 @@ class Config(object):
     # 通过关键字过滤资讯站点
     r_fingerprint = re.compile(u'新闻|资讯|门户')
     # 通过关键字过滤资讯站点
-    r_forbidden_fingerprint = re.compile(u'论坛')
+    r_forbidden_fingerprint = re.compile(u'论坛|彩票')
     # 需要过滤的网站类型  wap,bbs
     # wap版域名特征:
     #   1 m.开头
@@ -64,7 +64,7 @@ class Config(object):
     # 通过js跳转的代码
     r_js_redirect = re.compile('window\.location(\.href)?\s*=')
     # 该时间内无resp则自动放弃
-    timeout_limit = 1
+    timeout_limit = 2
     # 进程间共享数据
     process_num = multiprocessing.cpu_count() * 2  # 进程数量
     lock = multiprocessing.Lock()  # 进程锁

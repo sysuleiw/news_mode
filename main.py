@@ -20,15 +20,14 @@ def get_requests(url):
     try:
         resp = requests.get(
             url, headers=Config.headers, allow_redirects=False, timeout=Config.timeout_limit)
-        if resp.status_code < 300 or resp.status_code > 302:
-            if not Config.r_js_redirect.search(resp.text):
-                Config.ipc_list_redirect.append(resp.url)
-                get_by_fingerprint(resp)
-        else:
-            hostname = urlparse.urlparse(resp.headers['location']).hostname
-            if hostname and hostname.find('www.') > -1:
-                Config.ipc_list_redirect.append(resp.url)
-                get_by_fingerprint(resp)
+        if get_by_fingerprint(resp):
+            if resp.status_code < 300 or resp.status_code > 302:
+                if not Config.r_js_redirect.search(resp.text):
+                    Config.ipc_list_redirect.append(resp.url)
+            else:
+                hostname = urlparse.urlparse(resp.headers['location']).hostname
+                if hostname and hostname.find('www.') > -1:
+                    Config.ipc_list_redirect.append(resp.url)
     except requests.exceptions.Timeout:
         # 超时异常
         # redirect error 部分resp中的location只有path
@@ -52,6 +51,9 @@ def get_by_fingerprint(resp):
         head_cont = head.group(0)
         if Config.r_fingerprint.search(head_cont) and not Config.r_forbidden_fingerprint.search(head_cont):
             Config.ipc_list_fingerprint.append(resp.url)
+            return True
+        return False
+    return False
 
 
 if __name__ == "__main__":
