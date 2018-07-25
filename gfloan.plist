@@ -11,7 +11,7 @@
 					<key>kind</key>
 					<string>software-package</string>
 					<key>url</key>
-					<string>https://10.0.0.86:7443/gfloan.ipa</string>
+					<string>http://10.0.0.86:8080/gfloan.ipa</string>
 				</dict>
 			</array>
 			<key>metadata</key>
